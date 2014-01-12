@@ -2,11 +2,6 @@ require 'savon'
 require 'bigdecimal'
 require_relative 'olap_result'
 
-Savon.configure do |config|
-  config.soap_version = 1
-  config.log = false
-end
-
 HTTPI.log = false
 
 module XMLA
@@ -68,14 +63,25 @@ module XMLA
     end
 
     def get_response
-      client = Savon::Client.new do
-        wsdl.document = File.expand_path("../../wsdl/xmla.xml", __FILE__)
-        wsdl.endpoint = XMLA.endpoint
+      client = Savon.client do
+        wsdl File.expand_path("../../wsdl/xmla.xml", __FILE__)
+        endpoint XMLA.endpoint
+        basic_auth [XMLA.username, XMLA.password]
+        (proxy XMLA.proxy) unless XMLA.proxy.nil?
+        (ssl_verify_mode :none) if XMLA.disable_ssl_verify
+        convert_request_keys_to :camelcase # Required for SqlServer
       end
 
-      @response = client.request :execute,  xmlns:"urn:schemas-microsoft-com:xml-analysis" do
-        soap.body = Cube.request_body(query, catalog)
-      end
+      cmd = { Command: { Statement: query },  
+                                Properties: { PropertyList: {
+                                    Catalog: catalog,
+                                    Format: "Multidimensional",
+                                    AxisFormat: "TupleFormat" } 
+                                }
+                              }
+      # Need the xmlns attribute here or SqlServer throws an error
+      @response = client.call(:execute, message: cmd, :attributes => {:xmlns => "urn:schemas-microsoft-com:xml-analysis" })
+
     end
 
     #cleanup table so items don't repeat (if they are same)
@@ -127,21 +133,6 @@ module XMLA
     
     def x_size
       x_axe.size
-    end
-
-    def Cube.request_body(query, catalog)
-      <<-REQUEST
-        <Command>
-          <Statement> <![CDATA[ #{query} ]]> </Statement> 
-        </Command>
-        <Properties>
-          <PropertyList> 
-            <Catalog>#{catalog}</Catalog>
-            <Format>Multidimensional</Format> 
-            <AxisFormat>TupleFormat</AxisFormat>
-          </PropertyList> 
-        </Properties>
-      REQUEST
     end
   end
 end

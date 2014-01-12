@@ -9,7 +9,7 @@ Gem::Specification.new do |gem|
   gem.description = "Eases the pain I had to go through to get to the data out of XMLA based OLAP provider(Mondiran, Pentaho, icCube)"
   gem.summary = "Get's the data from OLAP cube via XMLA(Mondiran, Pentaho, icCube)"
   gem.homepage = "http://github.com/drKreso/cube"
-  gem.date = "2012-05-13"
+  gem.date = "2014-01-13"
 
 
   gem.licenses = ["MIT"]
@@ -21,8 +21,8 @@ Gem::Specification.new do |gem|
   gem.version = Cube::VERSION
 
 
-  gem.add_dependency "savon", ">= 0"
-  gem.add_dependency "webmock", ">= 0"
+  gem.add_dependency "savon", "~> 2.0"
+  gem.add_dependency "webmock", "~> 1.1"
 
 end
 
