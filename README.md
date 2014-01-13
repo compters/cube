@@ -1,6 +1,5 @@
 Cube
 ================
-[![Build Status](https://travis-ci.org/drKreso/cube.png)](https://travis-ci.org/drKreso/cube)
 
 Talk to the OLAP based backend via XMLA SOAP messages from Ruby.
 You can send (simple) MDX queries and get the result back in a human friendly from. 
@@ -27,6 +26,16 @@ Set up your catalog and endpoint
 XMLA.configure do |c|
  c.catalog = "OUTAGE"
  c.endpoint = "http://localhost:8383/mondrian/xmla"
+ # Proxy support and optional disabling of ssl verification
+ # Useful for checking requests
+ c.proxy = "http://127.0.0.1:8080"
+ c.disable_ssl_verify = true
+ # Logging & Log level is passed on to savon
+ c.log = false
+ c.log_level = :info
+ # Username and password, currently only set up for http basic auth
+ c.username = "USERNAME"
+ c.password = "PASSWORD"
 end
 ```
 
