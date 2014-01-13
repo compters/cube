@@ -67,6 +67,8 @@ module XMLA
         wsdl File.expand_path("../../wsdl/xmla.xml", __FILE__)
         endpoint XMLA.endpoint
         basic_auth [XMLA.username, XMLA.password]
+        log_level XMLA.log_level if XMLA.log_level
+        log XMLA.log
         (proxy XMLA.proxy) unless XMLA.proxy.nil?
         (ssl_verify_mode :none) if XMLA.disable_ssl_verify
         convert_request_keys_to :camelcase # Required for SqlServer
