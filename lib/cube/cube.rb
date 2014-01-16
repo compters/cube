@@ -1,5 +1,7 @@
 require 'savon'
 require 'bigdecimal'
+require 'byebug'
+
 require_relative 'olap_result'
 
 HTTPI.log = false
@@ -30,7 +32,8 @@ module XMLA
         cell_data[0]
       else
         (0...y_axe.size).reduce(header) do |result, j| 
-          result << ( y_axe[j] + (0...x_size).map { |i| "#{cell_data[i + j]}" })
+          # This has been modified so that cell_data is now a Hash of cell_ordinal -> value
+          result << ( y_axe[j] + (0...x_size).map { |i| "#{cell_data[(j * x_axe.size) + i]}" }) 
         end
       end
     end
@@ -106,11 +109,12 @@ module XMLA
     def cell_data
       cell_data = @response.to_hash[:execute_response][:return][:root][:cell_data]
       return [""] if cell_data.nil? 
-      @data ||= cell_data.reduce([]) do |data, cell|
-        cell[1].reduce(data) do |data, value|
-          data << (value.class == Hash ?  value[:value] : value[1] )
-        end
-      end
+      @data ||= Hash[cell_data.values[0].collect { |v| [Integer(v[:@cell_ordinal]), v[:value]] }]
+      # @data ||= cell_data.reduce([]) do |data, cell|
+      #   cell[1].reduce(data) do |data, value|
+      #     data << (value.class == Hash ?  value[:value] : value[1] )
+      #   end
+      # end
     end
 
     def tuple axe 
