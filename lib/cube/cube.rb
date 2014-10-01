@@ -20,7 +20,7 @@ module XMLA
 
     def as_table 
       return [table] if y_size == 0
-      clean_table(table, y_size).reduce([]) { |result, row| result << row.flatten }
+      table.reduce([]) { |result, row| result << row.flatten }
     end
 
     private
@@ -31,8 +31,7 @@ module XMLA
         cell_data[0]
       else
         (0...y_axe.size).reduce(header) do |result, j| 
-          # This has been modified so that cell_data is now a Hash of cell_ordinal -> value
-          result << ( y_axe[j] + (0...x_size).map { |i| "#{cell_data[(j * x_axe.size) + i]}" }) 
+          result << ( y_axe[j] + (0...x_size).map { |i| cell_data[(j * x_axe.size) + i] }) 
         end
       end
     end
@@ -47,10 +46,10 @@ module XMLA
         result << tuple(axe).reduce([]) { |y, member|
           data = (member[0] == :member) ? member[1] : member[:member]
           if ( data.class == Hash || data.size == 1 )
-            y << [data[:caption].strip].flatten 
+            y << [(data[:caption] || "").strip].flatten 
           else
             y << data.select { |item_data| item_data.class == Hash }.reduce([]) do |z,item_data| 
-              z << item_data[:caption].strip 
+              z << (item_data[:caption] || "").strip 
             end
           end
         }
@@ -108,12 +107,11 @@ module XMLA
     def cell_data
       cell_data = @response.to_hash[:execute_response][:return][:root][:cell_data]
       return [""] if cell_data.nil? 
-      @data ||= Hash[cell_data.values[0].collect { |v| [Integer(v[:@cell_ordinal]), v[:value]] }]
-      # @data ||= cell_data.reduce([]) do |data, cell|
-      #   cell[1].reduce(data) do |data, value|
-      #     data << (value.class == Hash ?  value[:value] : value[1] )
-      #   end
-      # end
+      vals = cell_data[:cell]
+      if vals.kind_of?(Hash)
+        vals = [vals]
+      end
+      @data ||= Hash[vals.collect { |v| [Integer(v[:@cell_ordinal]), v[:value]] }] 
     end
 
     def tuple axe 
