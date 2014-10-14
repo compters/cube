@@ -10,28 +10,28 @@ module XMLA
   class Cube
     attr_reader :query, :catalog
 
-    def Cube.execute(query, catalog = XMLA.catalog)
-      OlapResult.new(Cube.new(query, catalog).as_table)
+    def Cube.execute(query, withHeaders = true, catalog = XMLA.catalog)
+      OlapResult.new(Cube.new(query, catalog).as_table(withHeaders))
     end
 
-    def Cube.execute_scalar(query, catalog = XMLA.catalog)
-      BigDecimal.new Cube.new(query, catalog).as_table[0]
+    def Cube.execute_scalar(query, withHeaders = true, catalog = XMLA.catalog)
+      BigDecimal.new Cube.new(query, catalog).as_table(withHeaders)[0]
     end
 
-    def as_table 
-      return [table] if y_size == 0
-      table.reduce([]) { |result, row| result << row.flatten }
+    def as_table (withHeaders = true)
+      return [table(withHeaders)] if y_size == 0
+      table(withHeaders).reduce([]) { |result, row| result << row.flatten }
     end
 
     private
 
     #header and rows
-    def table
+    def table (withHeaders = true)
       if (header.size == 1 && y_size == 0)
         cell_data[0]
       else
-        (0...y_axe.size).reduce(header) do |result, j| 
-          result << ( y_axe[j] + (0...x_size).map { |i| cell_data[(j * x_axe.size) + i] }) 
+        (0...y_axe.size).reduce(withHeaders ? header : []) do |result, j| 
+          result << ( (withHeaders ? y_axe[j] : []) + (0...x_size).map { |i| cell_data[(j * x_axe.size) + i] }) 
         end
       end
     end
